@@ -1,0 +1,610 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Money Transfer API",
+    "description": "API documentation for the Money Transfer Application",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "john@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "password123"
+          }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "example": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": ["deposit", "transfer"],
+            "example": "deposit"
+          },
+          "amount": {
+            "type": "number",
+            "format": "float",
+            "example": 200.00
+          },
+          "description": {
+            "type": "string",
+            "example": "Salary deposit"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "completed", "failed"],
+            "example": "pending"
+          }
+        }
+      },
+      "Transfer": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "example": 1
+          },
+          "amount": {
+            "type": "number",
+            "format": "float",
+            "example": 100.00
+          },
+          "bankCode": {
+            "type": "string",
+            "example": "057"
+          },
+          "bankName": {
+            "type": "string",
+            "example": "Zenith Bank"
+          },
+          "accountNumber": {
+            "type": "string",
+            "example": "1234567890"
+          },
+          "accountName": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "description": {
+            "type": "string",
+            "example": "Payment for services"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User created successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "tags": ["Transactions"],
+        "summary": "Get user transactions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "User ID"
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": ["deposit", "transfer"]
+            },
+            "description": "Transaction type"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "completed", "failed"]
+            },
+            "description": "Transaction status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Transaction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Transactions"],
+        "summary": "Create a new transaction",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Transaction"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transaction": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transfers": {
+      "post": {
+        "tags": ["Transfers"],
+        "summary": "Create a new bank transfer",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Transfer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transaction": {
+                      "$ref": "#/components/schemas/Transaction"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transfers/send": {
+      "post": {
+        "tags": ["Transfers"],
+        "summary": "Send money to another bank account",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "amount",
+                  "bankCode",
+                  "bankName",
+                  "accountNumber",
+                  "accountName"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "ID of the user initiating the transfer"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "float",
+                    "example": 50.00,
+                    "description": "Amount to transfer"
+                  },
+                  "bankCode": {
+                    "type": "string",
+                    "example": "057",
+                    "description": "Bank code of the recipient bank"
+                  },
+                  "bankName": {
+                    "type": "string",
+                    "example": "Zenith Bank",
+                    "description": "Name of the recipient bank"
+                  },
+                  "accountNumber": {
+                    "type": "string",
+                    "example": "1234567890",
+                    "description": "Account number of the recipient"
+                  },
+                  "accountName": {
+                    "type": "string",
+                    "example": "John Doe",
+                    "description": "Name of the recipient account holder"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Payment for services",
+                    "description": "Description or narration for the transfer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer initiated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Transfer initiated successfully"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "pending"
+                    },
+                    "reference": {
+                      "type": "string",
+                      "example": "txn-1234567890"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Transfer failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Transfer failed"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Error connecting to bank API"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/bank-transfer": {
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Webhook endpoint for bank transfer notifications (updates transaction status)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "accountReference": { "type": "string", "example": "your-account-ref" },
+                  "amount": { "type": "number", "example": 5 },
+                  "status": { "type": "string", "enum": ["success", "completed", "failed", "pending"], "example": "success" },
+                  "metadata": {
+                    "type": "object",
+                    "properties": {
+                      "reference": { "type": "string", "example": "txn-1752347362453-a6e75975-9f56-4257-97fb-4f992265f8c0" }
+                    }
+                  }
+                },
+                "required": ["accountReference", "amount", "status", "metadata"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Webhook processed successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing required parameters" },
+          "404": { "description": "Account not found" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/accounts": {
+      "get": {
+        "tags": ["Accounts"],
+        "summary": "Get all accounts for the authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of accounts for the user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accounts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "example": 1 },
+                          "user_id": { "type": "integer", "example": 1 },
+                          "bankName": { "type": "string", "example": "Raven Bank" },
+                          "accountNumber": { "type": "string", "example": "1234567890" },
+                          "accountReference": { "type": "string", "example": "acc-1234567890" },
+                          "balance": { "type": "number", "example": 1000.00 },
+                          "status": { "type": "string", "example": "active" },
+                          "created_at": { "type": "string", "format": "date-time", "example": "2025-07-12T18:58:17.000Z" },
+                          "updated_at": { "type": "string", "format": "date-time", "example": "2025-07-12T18:58:17.000Z" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/api/accounts/wallet-balance": {
+      "post": {
+        "tags": ["Accounts"],
+        "summary": "Get wallet balance from external provider",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Wallet balance fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "walletBalance": {
+                      "type": "object",
+                      "description": "Wallet balance data returned from external API"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch wallet balance"
+          }
+        }
+      }
+    },
+    "/api/accounts/webhook/update": {
+      "post": {
+        "tags": ["Accounts"],
+        "summary": "Update webhook URL and secret key for external provider (uses fixed values)",
+        "security": [
+          { "bearerAuth": [] }
+        ],
+        "description": "This endpoint updates the webhook using fixed values for webhook_url and webhook_secret_key.",
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "description": "Response from external webhook update API"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to update webhook"
+          }
+        }
+      }
+    }
+  }
+}
